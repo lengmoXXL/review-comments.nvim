@@ -1,7 +1,7 @@
-local keymaps = require("review.keymaps")
+local keymaps = require("review-comments.keymaps")
 local t = keymaps._test
 
-describe("review.keymaps help", function()
+describe("review-comments.keymaps help", function()
   describe("format_key", function()
     it("passes through plain keys", function()
       assert.equals("i", t.format_key("i"))
@@ -37,11 +37,11 @@ describe("review.keymaps help", function()
         { key = "e", desc = "Edit comment" },
       }
       local lines = {}
-      t.add_section(entries, "Comments", lines, 5)
+      t.add_section(entries, "ReviewComments", lines, 5)
 
       assert.equals(4, #lines)
       assert.equals("", lines[1])
-      assert.equals("  Comments", lines[2])
+      assert.equals("  ReviewComments", lines[2])
       assert.matches("i", lines[3])
       assert.matches("Add comment", lines[3])
       assert.matches("e", lines[4])

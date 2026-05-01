@@ -1,12 +1,12 @@
 local M = {}
 
-local config = require("review.config")
-local highlights = require("review.highlights")
-local hooks = require("review.hooks")
-local keymaps = require("review.keymaps")
-local store = require("review.store")
-local export = require("review.export")
-local comments = require("review.comments")
+local config = require("review-comments.config")
+local highlights = require("review-comments.highlights")
+local hooks = require("review-comments.hooks")
+local keymaps = require("review-comments.keymaps")
+local store = require("review-comments.store")
+local export = require("review-comments.export")
+local comments = require("review-comments.comments")
 
 local initialized = false
 local augroup = nil
@@ -18,7 +18,7 @@ local function attach_current_buffer()
   end
 end
 
----@param opts? ReviewConfig
+---@param opts? ReviewCommentsConfig
 function M.setup(opts)
   config.setup(opts)
   highlights.setup()
@@ -29,7 +29,7 @@ function M.setup(opts)
     return
   end
 
-  augroup = vim.api.nvim_create_augroup("review", { clear = true })
+  augroup = vim.api.nvim_create_augroup("review_comments", { clear = true })
 
   vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
     group = augroup,
@@ -74,8 +74,8 @@ end
 
 function M.clear()
   store.clear()
-  require("review.marks").clear_all()
-  vim.notify("All comments cleared", vim.log.levels.INFO, { title = "review.nvim" })
+  require("review-comments.marks").clear_all()
+  vim.notify("All comments cleared", vim.log.levels.INFO, { title = "review-comments.nvim" })
 end
 
 function M.count()

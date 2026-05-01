@@ -1,8 +1,8 @@
-local store = require("review.store")
-local marks = require("review.marks")
-local config = require("review.config")
+local store = require("review-comments.store")
+local marks = require("review-comments.marks")
+local config = require("review-comments.config")
 
-describe("review integration", function()
+describe("comments integration", function()
   local bufnr
 
   before_each(function()
@@ -43,7 +43,7 @@ describe("review integration", function()
       marks.render_for_buffer(bufnr)
 
       -- Check extmarks were created
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
@@ -58,7 +58,7 @@ describe("review integration", function()
 
       marks.render_for_buffer(bufnr)
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(3, #extmarks)
@@ -68,7 +68,7 @@ describe("review integration", function()
       store.add("test_file.lua", 3, "issue", "Issue here")
       marks.render_for_buffer(bufnr)
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks_before = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, {})
       assert.equals(1, #extmarks_before)
 
@@ -85,7 +85,7 @@ describe("review integration", function()
 
       marks.render_for_buffer(bufnr)
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
@@ -100,7 +100,7 @@ describe("review integration", function()
 
       marks.render_for_buffer(bufnr)
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       local details = extmarks[1][4]
@@ -116,7 +116,7 @@ describe("review integration", function()
         store.add("test_file.lua", 3, type_name, "Test " .. type_name)
         marks.render_for_buffer(bufnr)
 
-        local ns_id = vim.api.nvim_create_namespace("review")
+        local ns_id = vim.api.nvim_create_namespace("review_comments")
         local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
         local details = extmarks[1][4]
@@ -133,7 +133,7 @@ describe("review integration", function()
       store.add("test_file.lua", 3, "issue", "Missing error handling")
       store.add("test_file.lua", 7, "suggestion", "Use local variable")
 
-      local export = require("review.export")
+      local export = require("review-comments.export")
       local md = export.generate_markdown()
 
       assert.matches("test_file.lua:3", md)

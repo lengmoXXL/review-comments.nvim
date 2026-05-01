@@ -1,6 +1,6 @@
-local store = require("review.store")
-local marks = require("review.marks")
-local config = require("review.config")
+local store = require("review-comments.store")
+local marks = require("review-comments.marks")
+local config = require("review-comments.config")
 
 describe("path relativization for comment rendering", function()
   local bufnr
@@ -39,7 +39,7 @@ describe("path relativization for comment rendering", function()
       -- Rendering uses git-root-relative path via file_override (after relativization fix)
       marks.render_for_buffer(bufnr, "backend/ngen/.github/workflows/ci.yml")
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
@@ -52,7 +52,7 @@ describe("path relativization for comment rendering", function()
       -- If we pass CWD-relative path (the bug), it won't match
       marks.render_for_buffer(bufnr, ".github/workflows/ci.yml")
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(0, #extmarks)
@@ -70,7 +70,7 @@ describe("path relativization for comment rendering", function()
       marks.render_for_buffer(orig_buf, "backend/ngen/src/app.lua")
       marks.render_for_buffer(bufnr, "backend/ngen/src/app.lua")
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local orig_marks = vim.api.nvim_buf_get_extmarks(orig_buf, ns_id, 0, -1, { details = true })
       local mod_marks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
@@ -87,7 +87,7 @@ describe("path relativization for comment rendering", function()
       store.add(path, 3, "issue", "Needs accessibility attrs")
       marks.render_for_buffer(bufnr, path)
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
@@ -98,7 +98,7 @@ describe("path relativization for comment rendering", function()
       store.add("src/app.lua", 3, "issue", "Fix")
       marks.render_for_buffer(bufnr, "./src/app.lua")
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
@@ -112,7 +112,7 @@ describe("path relativization for comment rendering", function()
 
       marks.render_for_buffer(bufnr, path)
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(3, #extmarks)

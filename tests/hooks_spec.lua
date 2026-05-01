@@ -1,8 +1,8 @@
-local hooks = require("review.hooks")
-local store = require("review.store")
-local config = require("review.config")
+local hooks = require("review-comments.hooks")
+local store = require("review-comments.store")
+local config = require("review-comments.config")
 
-describe("review.hooks buffer provider", function()
+describe("review-comments.hooks buffer provider", function()
   local bufnr
 
   before_each(function()
@@ -47,7 +47,7 @@ describe("review.hooks buffer provider", function()
 
     hooks.attach_buffer(bufnr)
 
-    local ns_id = vim.api.nvim_create_namespace("review")
+    local ns_id = vim.api.nvim_create_namespace("review_comments")
     local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
     assert.equals(1, #extmarks)
   end)

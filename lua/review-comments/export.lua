@@ -1,9 +1,9 @@
 local M = {}
 
-local store = require("review.store")
+local store = require("review-comments.store")
 
 local function notify(msg, level)
-  vim.notify(msg, level, { title = "review.nvim" })
+  vim.notify(msg, level, { title = "review-comments.nvim" })
 end
 
 ---@return string

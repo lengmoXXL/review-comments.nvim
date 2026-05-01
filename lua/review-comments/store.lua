@@ -1,6 +1,6 @@
 local M = {}
 
-local storage = require("review.storage")
+local storage = require("review-comments.storage")
 
 ---@class Comment
 ---@field id string
@@ -27,6 +27,31 @@ local function persist()
   storage.save(M.comments)
 end
 
+local function normalize_loaded_comments(raw_comments)
+  local normalized = {}
+
+  for file, comments in pairs(raw_comments or {}) do
+    if type(comments) == "table" then
+      for _, comment in ipairs(comments) do
+        if type(comment) == "table" then
+          normalized[file] = normalized[file] or {}
+          table.insert(normalized[file], {
+            id = comment.id,
+            file = comment.file or file,
+            line = comment.line,
+            line_end = comment.line_end,
+            type = comment.type,
+            text = comment.text,
+            created_at = comment.created_at,
+          })
+        end
+      end
+    end
+  end
+
+  return normalized
+end
+
 function M.reset()
   M.comments = {}
   id_counter = 0
@@ -37,12 +62,7 @@ function M.load()
   if loaded then
     return
   end
-  M.comments = storage.load()
-  for _, comments in pairs(M.comments) do
-    for _, comment in ipairs(comments) do
-      comment.side = nil
-    end
-  end
+  M.comments = normalize_loaded_comments(storage.load())
   -- Update id_counter to avoid collisions
   for _, comments in pairs(M.comments) do
     for _, comment in ipairs(comments) do

@@ -1,11 +1,11 @@
 local M = {}
 
-local store = require("review.store")
-local config = require("review.config")
-local utils = require("review.utils")
+local store = require("review-comments.store")
+local config = require("review-comments.config")
+local utils = require("review-comments.utils")
 
-local ns_id = vim.api.nvim_create_namespace("review")
-local ns_padding = vim.api.nvim_create_namespace("review_padding")
+local ns_id = vim.api.nvim_create_namespace("review_comments")
+local ns_padding = vim.api.nvim_create_namespace("review_comments_padding")
 
 ---@param text string
 ---@param type_name string
@@ -61,7 +61,7 @@ function M.render_for_buffer(bufnr, file_override)
   for _, comment in ipairs(comments) do
     local type_info = cfg.comment_types[comment.type]
     local icon = type_info and type_info.icon or "●"
-    local hl = type_info and type_info.hl or "ReviewSign"
+    local hl = type_info and type_info.hl or "ReviewCommentsSign"
     local line_hl = type_info and type_info.line_hl
     local name = type_info and type_info.name or comment.type
     local virt_lines = build_comment_box(comment.text, name, hl)
@@ -125,7 +125,7 @@ function M.render_for_buffer(bufnr, file_override)
 end
 
 function M.refresh()
-  local ok, hooks = pcall(require, "review.hooks")
+  local ok, hooks = pcall(require, "review-comments.hooks")
   if not ok then
     return
   end

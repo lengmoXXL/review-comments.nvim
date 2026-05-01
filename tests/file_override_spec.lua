@@ -1,6 +1,6 @@
-local store = require("review.store")
-local marks = require("review.marks")
-local config = require("review.config")
+local store = require("review-comments.store")
+local marks = require("review-comments.marks")
+local config = require("review-comments.config")
 
 describe("marks file_override", function()
   local bufnr
@@ -35,7 +35,7 @@ describe("marks file_override", function()
       -- Buffer has no name, but file_override provides the path
       marks.render_for_buffer(bufnr, "src/app.lua")
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
@@ -43,13 +43,13 @@ describe("marks file_override", function()
     end)
 
     it("renders comments with file_override even when buffer name is unusable", function()
-      vim.api.nvim_buf_set_name(bufnr, "term://review")
+      vim.api.nvim_buf_set_name(bufnr, "term://review-comments")
 
       store.add("src/app.lua", 3, "note", "A note")
 
       marks.render_for_buffer(bufnr, "src/app.lua")
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
@@ -60,7 +60,7 @@ describe("marks file_override", function()
 
       marks.render_for_buffer(bufnr, "./src/app.lua")
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
@@ -71,7 +71,7 @@ describe("marks file_override", function()
 
       marks.render_for_buffer(bufnr, "src/app.lua/")
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
@@ -82,7 +82,7 @@ describe("marks file_override", function()
 
       marks.render_for_buffer(bufnr, "src/app.lua")
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(0, #extmarks)
@@ -95,7 +95,7 @@ describe("marks file_override", function()
 
       marks.render_for_buffer(bufnr)
 
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
       assert.equals(1, #extmarks)
