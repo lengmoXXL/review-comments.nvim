@@ -101,6 +101,7 @@ local function show_help()
 
   entry("export_clipboard", "Export to clipboard", action_entries)
   entry("send_sidekick", "Send to sidekick", action_entries)
+  entry("send_tmux", "Send to tmux pane", action_entries)
   entry("clear_comments", "Clear all", action_entries)
   entry("show_help", "This help", action_entries)
 
@@ -199,6 +200,7 @@ function M.setup_buffer(bufnr)
   set(km.list_comments, function() comments.list() end, "List all comments")
   set(km.export_clipboard, function() export.to_clipboard() end, "Export to clipboard")
   set(km.send_sidekick, function() export.to_sidekick() end, "Send to sidekick")
+  set(km.send_tmux, function() require("review-comments.tmux").send_current_review() end, "Send to tmux pane")
   set(km.clear_comments, function() require("review-comments").clear() end, "Clear all comments")
   set(km.show_help, show_help, "Show help")
 

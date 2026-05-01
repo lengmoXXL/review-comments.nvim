@@ -3,6 +3,7 @@
 :ReviewComments-list	review-comments.txt	/*:ReviewComments-list*
 :ReviewComments-preview	review-comments.txt	/*:ReviewComments-preview*
 :ReviewComments-sidekick	review-comments.txt	/*:ReviewComments-sidekick*
+:ReviewComments-tmux	review-comments.txt	/*:ReviewComments-tmux*
 review-comments-commands	review-comments.txt	/*review-comments-commands*
 review-comments-config	review-comments.txt	/*review-comments-config*
 review-comments-contents	review-comments.txt	/*review-comments-contents*
@@ -13,6 +14,7 @@ review-comments-keymaps-actions	review-comments.txt	/*review-comments-keymaps-ac
 review-comments-keymaps-comments	review-comments.txt	/*review-comments-keymaps-comments*
 review-comments-keymaps-nav	review-comments.txt	/*review-comments-keymaps-nav*
 review-comments-keymaps-popup	review-comments.txt	/*review-comments-keymaps-popup*
+review-comments-keymaps-tmux	review-comments.txt	/*review-comments-keymaps-tmux*
 review-comments-overview	review-comments.txt	/*review-comments-overview*
 review-comments-requirements	review-comments.txt	/*review-comments-requirements*
 review-comments-storage	review-comments.txt	/*review-comments-storage*

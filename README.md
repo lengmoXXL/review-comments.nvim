@@ -13,11 +13,13 @@ Forked from [georgeguimaraes/review.nvim](https://github.com/georgeguimaraes/rev
 - Comments persist per project in Neovim's XDG data directory: `~/.local/share/nvim/review-comments/`
 - Export comments as structured Markdown for AI conversations
 - Send comments directly to [sidekick.nvim](https://github.com/folke/sidekick.nvim)
+- Send comments to a selected pane in the current tmux session
 
 ## Requirements
 
 - Neovim >= 0.9
 - [nui.nvim](https://github.com/MunifTanjim/nui.nvim)
+- tmux (optional, only for tmux pane sending)
 
 ## Installation
 
@@ -47,6 +49,7 @@ Management commands:
 :ReviewComments export       " Export comments to clipboard
 :ReviewComments preview      " Preview exported markdown in split
 :ReviewComments sidekick     " Send comments to sidekick.nvim
+:ReviewComments tmux         " Send comments to a tmux pane
 :ReviewComments list         " List all comments and jump to one
 :ReviewComments clear        " Clear all comments
 ```
@@ -74,6 +77,7 @@ All keymaps are buffer-local to normal file buffers. Set any keymap to `false` t
 | `<localleader>cl` | List all comments |
 | `<localleader>cx` | Export to clipboard |
 | `<localleader>cS` | Send to sidekick.nvim |
+| `<localleader>ct` | Send to tmux pane |
 | `<localleader>cX` | Clear all comments |
 | `<localleader>c?` | Show help |
 
@@ -85,6 +89,14 @@ Comment popup:
 | `Ctrl+s` | Submit comment |
 | `Tab` | Cycle comment type |
 | `Esc` / `q` | Cancel in normal mode |
+
+Tmux pane picker:
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Paste comments into the selected pane |
+| `Ctrl+s` | Paste comments and press Enter |
+| `Esc` / `q` | Cancel |
 
 ## Configuration
 
@@ -110,6 +122,7 @@ require("review-comments").setup({
     list_comments = "<localleader>cl",
     export_clipboard = "<localleader>cx",
     send_sidekick = "<localleader>cS",
+    send_tmux = "<localleader>ct",
     clear_comments = "<localleader>cX",
     show_help = "<localleader>c?",
   },

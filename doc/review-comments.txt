@@ -20,13 +20,14 @@ CONTENTS                                             *review-comments-contents*
 
 review-comments.nvim adds code review comments to normal Neovim file buffers.
 You can leave notes, suggestions, issues, and praise on specific lines or
-ranges, then export them to clipboard or send them to sidekick.nvim for AI chat.
+ranges, then export them to clipboard, sidekick.nvim, or a tmux pane.
 
 Features:
 - Line, range, and file-level comments with box-style virtual text
 - Four comment types: Note, Suggestion, Issue, Praise
 - Comments persist per project across sessions
 - Export format optimized for AI conversations
+- Send exported comments to a selected pane in the current tmux session
 - Buffer-local keymaps on normal file buffers
 
 ==============================================================================
@@ -34,6 +35,7 @@ Features:
 
 - Neovim >= 0.9
 - nui.nvim (https://github.com/MunifTanjim/nui.nvim)
+- tmux (optional, only for tmux pane sending)
 
 ==============================================================================
 3. COMMANDS                                          *review-comments-commands*
@@ -48,6 +50,9 @@ All commands use the `:ReviewComments` prefix.
 
                                                    *:ReviewComments-sidekick*
 :ReviewComments sidekick    Send comments to sidekick.nvim.
+
+                                                       *:ReviewComments-tmux*
+:ReviewComments tmux        Send comments to a tmux pane.
 
                                                        *:ReviewComments-list*
 :ReviewComments list        List all comments with a picker to jump to any.
@@ -127,6 +132,7 @@ ACTIONS                                      *review-comments-keymaps-actions*
     Key                  Description ~
     `<localleader>cx`    Export to clipboard + preview        |n|
     `<localleader>cS`    Send to sidekick.nvim                |n|
+    `<localleader>ct`    Send to tmux pane                    |n|
     `<localleader>cX`    Clear all comments                   |n|
     `<localleader>c?`    Show help popup                      |n|
 
@@ -140,6 +146,16 @@ These keymaps are active inside the comment popup window:
     `q`           Cancel (normal mode)                   |n|
     `<Esc>`       Cancel (normal mode)                   |n|
     `<Tab>`       Cycle comment type                     |i, n|
+
+TMUX PANE PICKER                           *review-comments-keymaps-tmux*
+
+These keymaps are active inside the tmux pane picker:
+
+    Key            Description ~
+    `<CR>`         Paste comments into the selected pane       |n|
+    `<C-s>`        Paste comments and press Enter              |n|
+    `q`            Cancel                                     |n|
+    `<Esc>`        Cancel                                     |n|
 
 ==============================================================================
 6. HIGHLIGHT GROUPS                              *review-comments-highlights*

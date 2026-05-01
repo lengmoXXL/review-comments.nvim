@@ -24,6 +24,7 @@ local M = {}
 ---@field list_comments string|false
 ---@field export_clipboard string|false
 ---@field send_sidekick string|false
+---@field send_tmux string|false
 ---@field clear_comments string|false
 ---@field add_file_comment string|false
 ---@field popup_submit string|false
@@ -56,6 +57,7 @@ M.defaults = {
     list_comments = "<localleader>cl",
     export_clipboard = "<localleader>cx",
     send_sidekick = "<localleader>cS",
+    send_tmux = "<localleader>ct",
     clear_comments = "<localleader>cX",
     -- Help
     show_help = "<localleader>c?",
