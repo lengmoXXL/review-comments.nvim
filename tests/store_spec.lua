@@ -1,6 +1,6 @@
-local store = require("review.store")
+local store = require("review-comments.store")
 
-describe("review.store", function()
+describe("review-comments.store", function()
   before_each(function()
     store.clear()
   end)
@@ -94,9 +94,21 @@ describe("review.store", function()
   end)
 
   describe("buffer-only comments", function()
-    it("does not store a side field", function()
+    it("stores only buffer comment fields", function()
       local c = store.add("file.lua", 10, "note", "plain buffer comment")
-      assert.is_nil(c.side)
+      local allowed = {
+        id = true,
+        file = true,
+        line = true,
+        line_end = true,
+        type = true,
+        text = true,
+        created_at = true,
+      }
+
+      for key in pairs(c) do
+        assert.is_true(allowed[key], "unexpected field: " .. key)
+      end
     end)
 
     it("returns all comments for a file", function()
@@ -107,7 +119,7 @@ describe("review.store", function()
       assert.equals(2, #all)
     end)
 
-    it("same-line comments are looked up without side filtering", function()
+    it("same-line comments are looked up by buffer position", function()
       store.add("file.lua", 10, "note", "first")
       store.add("file.lua", 10, "issue", "second")
 

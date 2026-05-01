@@ -1,7 +1,7 @@
-local store = require("review.store")
-local marks = require("review.marks")
-local export = require("review.export")
-local config = require("review.config")
+local store = require("review-comments.store")
+local marks = require("review-comments.marks")
+local export = require("review-comments.export")
+local config = require("review-comments.config")
 
 describe("line-range comments", function()
   local bufnr
@@ -151,7 +151,7 @@ describe("line-range comments", function()
   end)
 
   describe("marks rendering", function()
-    local ns_id = vim.api.nvim_create_namespace("review")
+    local ns_id = vim.api.nvim_create_namespace("review_comments")
 
     it("renders range comment with extmarks on all lines", function()
       store.add("range_test.lua", 3, "issue", "Needs refactor", 6)

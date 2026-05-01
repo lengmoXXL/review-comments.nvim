@@ -1,7 +1,7 @@
-local store = require("review.store")
-local marks = require("review.marks")
-local export = require("review.export")
-local config = require("review.config")
+local store = require("review-comments.store")
+local marks = require("review-comments.marks")
+local export = require("review-comments.export")
+local config = require("review-comments.config")
 
 describe("file-level comments", function()
   local bufnr
@@ -85,7 +85,7 @@ describe("file-level comments", function()
   end)
 
   describe("marks rendering", function()
-    local ns_id = vim.api.nvim_create_namespace("review")
+    local ns_id = vim.api.nvim_create_namespace("review_comments")
 
     it("renders file comment at row 0 with virt_lines_above", function()
       store.add("file_comment_test.lua", 0, "note", "Nice module")
@@ -156,7 +156,7 @@ describe("file-level comments", function()
     end)
 
     it("renders file comment marks", function()
-      local ns_id = vim.api.nvim_create_namespace("review")
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       store.add("file_comment_test.lua", 0, "note", "File note")
 
       marks.render_for_buffer(bufnr)
@@ -164,8 +164,8 @@ describe("file-level comments", function()
       assert.equals(1, #extmarks)
     end)
 
-    it("line comment renders without side filtering", function()
-      local ns_id = vim.api.nvim_create_namespace("review")
+    it("line comment renders by buffer path", function()
+      local ns_id = vim.api.nvim_create_namespace("review_comments")
       store.add("file_comment_test.lua", 3, "issue", "Line comment")
 
       marks.render_for_buffer(bufnr)

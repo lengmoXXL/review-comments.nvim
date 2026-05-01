@@ -1,7 +1,7 @@
-local keymaps = require("review.keymaps")
-local config = require("review.config")
+local keymaps = require("review-comments.keymaps")
+local config = require("review-comments.config")
 
-describe("review.keymaps buffer setup", function()
+describe("review-comments.keymaps buffer setup", function()
   local bufnr
 
   before_each(function()

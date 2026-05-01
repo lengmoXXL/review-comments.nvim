@@ -1,13 +1,13 @@
 local M = {}
 
-local store = require("review.store")
-local hooks = require("review.hooks")
-local popup = require("review.popup")
-local marks = require("review.marks")
-local utils = require("review.utils")
+local store = require("review-comments.store")
+local hooks = require("review-comments.hooks")
+local popup = require("review-comments.popup")
+local marks = require("review-comments.marks")
+local utils = require("review-comments.utils")
 
 local function notify(msg, level)
-  vim.notify(msg, level, { title = "review.nvim" })
+  vim.notify(msg, level, { title = "review-comments.nvim" })
 end
 
 ---@param initial_type? "note"|"suggestion"|"issue"|"praise"
@@ -191,7 +191,7 @@ function M.goto_prev()
 end
 
 function M.list()
-  local config = require("review.config").get()
+  local config = require("review-comments.config").get()
   local all_comments = store.get_all()
 
   if #all_comments == 0 then
@@ -219,7 +219,7 @@ function M.list()
 
   -- Show picker
   vim.ui.select(items, {
-    prompt = "Comments:",
+    prompt = "ReviewComments:",
     format_item = function(item)
       return item.display
     end,

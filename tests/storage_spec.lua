@@ -1,11 +1,11 @@
-local storage = require("review.storage")
+local storage = require("review-comments.storage")
 
-describe("review.storage", function()
+describe("review-comments.storage", function()
   describe("get_storage_path", function()
     it("returns project-scoped json path", function()
       local path = storage.get_storage_path()
       assert.is_not_nil(path)
-      assert.truthy(path:match("/review/[%x]+%.json$"))
+      assert.truthy(path:match("/review%-comments/[%x]+%.json$"))
     end)
 
     it("uses a stable path for the same project", function()

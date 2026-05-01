@@ -1,6 +1,6 @@
 local M = {}
 
-local config = require("review.config")
+local config = require("review-comments.config")
 
 ---@param initial_type? "note"|"suggestion"|"issue"|"praise"
 ---@param initial_text? string
@@ -10,7 +10,7 @@ function M.open(initial_type, initial_text, callback)
   local ok_layout, Layout = pcall(require, "nui.layout")
 
   if not (ok_popup and ok_layout) then
-    vim.notify("nui.nvim is required for comment input", vim.log.levels.ERROR, { title = "review.nvim" })
+    vim.notify("nui.nvim is required for comment input", vim.log.levels.ERROR, { title = "review-comments.nvim" })
     callback(nil, nil)
     return
   end

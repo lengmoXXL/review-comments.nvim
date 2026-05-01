@@ -1,8 +1,8 @@
-# review.nvim
+# review-comments.nvim
 
-Code review annotations for normal Neovim file buffers, optimized for AI feedback loops.
+Code review comments for normal Neovim file buffers, optimized for AI feedback loops.
 
-Inspired by [tuicr](https://github.com/agavra/tuicr).
+Forked from [georgeguimaraes/review.nvim](https://github.com/georgeguimaraes/review.nvim).
 
 ## Features
 
@@ -10,7 +10,7 @@ Inspired by [tuicr](https://github.com/agavra/tuicr).
 - Multi-line comment support with box-style virtual text display
 - File-level comments for whole-file feedback
 - Comments displayed as signs, line highlights, and virtual lines
-- Comments persist per project in Neovim's XDG data directory: `~/.local/share/nvim/review/`
+- Comments persist per project in Neovim's XDG data directory: `~/.local/share/nvim/review-comments/`
 - Export comments as structured Markdown for AI conversations
 - Send comments directly to [sidekick.nvim](https://github.com/folke/sidekick.nvim)
 
@@ -25,7 +25,7 @@ Using lazy.nvim:
 
 ```lua
 {
-  "georgeguimaraes/review.nvim",
+  "lengmoXXL/review-comments.nvim",
   dependencies = {
     "MunifTanjim/nui.nvim",
   },
@@ -35,20 +35,20 @@ Using lazy.nvim:
 
 ## Usage
 
-Call `setup()` and open a normal file buffer. review.nvim automatically attaches buffer-local keymaps and renders any saved comments for that file.
+Call `setup()` and open a normal file buffer. review-comments.nvim automatically attaches buffer-local keymaps and renders any saved comments for that file.
 
 ```lua
-require("review").setup()
+require("review-comments").setup()
 ```
 
 Management commands:
 
 ```vim
-:Review export       " Export comments to clipboard
-:Review preview      " Preview exported markdown in split
-:Review sidekick     " Send comments to sidekick.nvim
-:Review list         " List all comments and jump to one
-:Review clear        " Clear all comments
+:ReviewComments export       " Export comments to clipboard
+:ReviewComments preview      " Preview exported markdown in split
+:ReviewComments sidekick     " Send comments to sidekick.nvim
+:ReviewComments list         " List all comments and jump to one
+:ReviewComments clear        " Clear all comments
 ```
 
 When you spot something worth commenting on, use `<localleader>cc` on the line and pick a comment type from the menu. For multi-line comments, visually select the range first then press `<localleader>cc`. For file-level comments that apply to the whole file, press `<localleader>cf`.
@@ -89,12 +89,12 @@ Comment popup:
 ## Configuration
 
 ```lua
-require("review").setup({
+require("review-comments").setup({
   comment_types = {
-    note = { key = "n", name = "Note", icon = "📝", hl = "ReviewNote", line_hl = "ReviewNoteLine" },
-    suggestion = { key = "s", name = "Suggestion", icon = "💡", hl = "ReviewSuggestion", line_hl = "ReviewSuggestionLine" },
-    issue = { key = "i", name = "Issue", icon = "⚠️", hl = "ReviewIssue", line_hl = "ReviewIssueLine" },
-    praise = { key = "p", name = "Praise", icon = "✨", hl = "ReviewPraise", line_hl = "ReviewPraiseLine" },
+    note = { key = "n", name = "Note", icon = "📝", hl = "ReviewCommentsNote", line_hl = "ReviewCommentsNoteLine" },
+    suggestion = { key = "s", name = "Suggestion", icon = "💡", hl = "ReviewCommentsSuggestion", line_hl = "ReviewCommentsSuggestionLine" },
+    issue = { key = "i", name = "Issue", icon = "⚠️", hl = "ReviewCommentsIssue", line_hl = "ReviewCommentsIssueLine" },
+    praise = { key = "p", name = "Praise", icon = "✨", hl = "ReviewCommentsPraise", line_hl = "ReviewCommentsPraiseLine" },
   },
   keymaps = {
     add_comment = "<localleader>cc",

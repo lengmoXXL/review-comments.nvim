@@ -1,7 +1,7 @@
 local M = {}
 
-local marks = require("review.marks")
-local utils = require("review.utils")
+local marks = require("review-comments.marks")
+local utils = require("review-comments.utils")
 
 ---@type table<number, boolean>
 local attached_buffers = {}

@@ -1,8 +1,8 @@
 local M = {}
 
-local utils = require("review.utils")
+local utils = require("review-comments.utils")
 
-local data_dir = vim.fn.stdpath("data") .. "/review"
+local data_dir = vim.fn.stdpath("data") .. "/review-comments"
 
 ---@param str string
 ---@return string

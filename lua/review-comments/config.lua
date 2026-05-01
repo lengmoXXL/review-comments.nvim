@@ -1,8 +1,8 @@
 local M = {}
 
----@class ReviewConfig
+---@class ReviewCommentsConfig
 ---@field comment_types table<string, CommentType>
----@field keymaps ReviewKeymaps
+---@field keymaps ReviewCommentsKeymaps
 
 ---@class CommentType
 ---@field key string
@@ -11,7 +11,7 @@ local M = {}
 ---@field hl string
 ---@field line_hl string
 
----@class ReviewKeymaps
+---@class ReviewCommentsKeymaps
 ---@field add_comment string|false
 ---@field add_note string|false
 ---@field add_suggestion string|false
@@ -31,13 +31,13 @@ local M = {}
 ---@field show_help string|false
 ---@field popup_cycle_type string|false
 
----@type ReviewConfig
+---@type ReviewCommentsConfig
 M.defaults = {
   comment_types = {
-    note = { key = "n", name = "Note", icon = "📝", hl = "ReviewNote", line_hl = "ReviewNoteLine" },
-    suggestion = { key = "s", name = "Suggestion", icon = "💡", hl = "ReviewSuggestion", line_hl = "ReviewSuggestionLine" },
-    issue = { key = "i", name = "Issue", icon = "⚠️", hl = "ReviewIssue", line_hl = "ReviewIssueLine" },
-    praise = { key = "p", name = "Praise", icon = "✨", hl = "ReviewPraise", line_hl = "ReviewPraiseLine" },
+    note = { key = "n", name = "Note", icon = "📝", hl = "ReviewCommentsNote", line_hl = "ReviewCommentsNoteLine" },
+    suggestion = { key = "s", name = "Suggestion", icon = "💡", hl = "ReviewCommentsSuggestion", line_hl = "ReviewCommentsSuggestionLine" },
+    issue = { key = "i", name = "Issue", icon = "⚠️", hl = "ReviewCommentsIssue", line_hl = "ReviewCommentsIssueLine" },
+    praise = { key = "p", name = "Praise", icon = "✨", hl = "ReviewCommentsPraise", line_hl = "ReviewCommentsPraiseLine" },
   },
   keymaps = {
     -- Edit mode (leader-based)
@@ -66,15 +66,15 @@ M.defaults = {
   },
 }
 
----@type ReviewConfig
+---@type ReviewCommentsConfig
 M.config = vim.deepcopy(M.defaults)
 
----@param opts? ReviewConfig
+---@param opts? ReviewCommentsConfig
 function M.setup(opts)
   M.config = vim.tbl_deep_extend("force", M.defaults, opts or {})
 end
 
----@return ReviewConfig
+---@return ReviewCommentsConfig
 function M.get()
   return M.config
 end

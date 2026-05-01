@@ -1,7 +1,7 @@
-local store = require("review.store")
-local export = require("review.export")
+local store = require("review-comments.store")
+local export = require("review-comments.export")
 
-describe("review.export", function()
+describe("review-comments.export", function()
   before_each(function()
     store.clear()
   end)
@@ -32,7 +32,7 @@ describe("review.export", function()
       assert.matches("3%. %*%*%[ISSUE%]%*%*", md)
     end)
 
-    it("does not include diff side notation", function()
+    it("exports plain buffer locations", function()
       store.add("src/main.lua", 10, "issue", "Plain buffer comment")
 
       local md = export.generate_markdown()
