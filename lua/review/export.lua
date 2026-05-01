@@ -20,22 +20,14 @@ function M.generate_markdown()
   table.insert(lines, "I reviewed your code and have the following comments. Please address them.")
   table.insert(lines, "")
   table.insert(lines, "Comment types: ISSUE (problems to fix), SUGGESTION (improvements), NOTE (observations), PRAISE (positive feedback)")
-  table.insert(lines, "Lines prefixed with ~ refer to the old (left) side of the diff.")
   table.insert(lines, "")
 
   -- Numbered list of comments
   for i, comment in ipairs(all_comments) do
     local type_name = string.upper(comment.type)
     local location
-    local is_old = (comment.side or "new") == "old"
     if comment.line == 0 then
       location = comment.file
-    elseif is_old then
-      if comment.line_end and comment.line_end ~= comment.line then
-        location = string.format("%s:~%d-~%d", comment.file, comment.line, comment.line_end)
-      else
-        location = string.format("%s:~%d", comment.file, comment.line)
-      end
     elseif comment.line_end and comment.line_end ~= comment.line then
       location = string.format("%s:%d-%d", comment.file, comment.line, comment.line_end)
     else

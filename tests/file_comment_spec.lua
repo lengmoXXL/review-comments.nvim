@@ -146,48 +146,31 @@ describe("file-level comments", function()
     end)
   end)
 
-  describe("side awareness", function()
-    it("file comment renders on both sides via get_for_file", function()
+  describe("buffer-only comments", function()
+    it("file comment and line comments are returned together", function()
       store.add("file_comment_test.lua", 0, "note", "File comment")
-      store.add("file_comment_test.lua", 5, "issue", "New side", nil, "new")
+      store.add("file_comment_test.lua", 5, "issue", "Line comment")
 
-      local old_comments = store.get_for_file("file_comment_test.lua", "old")
-      local new_comments = store.get_for_file("file_comment_test.lua", "new")
-
-      -- file comment (line 0) appears in both
-      assert.equals(1, #old_comments)
-      assert.equals(0, old_comments[1].line)
-
-      assert.equals(2, #new_comments)
+      local comments = store.get_for_file("file_comment_test.lua")
+      assert.equals(2, #comments)
     end)
 
-    it("renders file comment marks on both old and new buffers", function()
+    it("renders file comment marks", function()
       local ns_id = vim.api.nvim_create_namespace("review")
       store.add("file_comment_test.lua", 0, "note", "File note")
 
-      -- Render with "old" side
-      marks.render_for_buffer(bufnr, "old")
-      local extmarks_old = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
-      assert.equals(1, #extmarks_old)
-
-      -- Clear and render with "new" side
-      vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
-      marks.render_for_buffer(bufnr, "new")
-      local extmarks_new = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
-      assert.equals(1, #extmarks_new)
+      marks.render_for_buffer(bufnr)
+      local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
+      assert.equals(1, #extmarks)
     end)
 
-    it("line comment only renders on matching side", function()
+    it("line comment renders without side filtering", function()
       local ns_id = vim.api.nvim_create_namespace("review")
-      store.add("file_comment_test.lua", 3, "issue", "New only", nil, "new")
+      store.add("file_comment_test.lua", 3, "issue", "Line comment")
 
-      marks.render_for_buffer(bufnr, "old")
-      local extmarks_old = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
-      assert.equals(0, #extmarks_old)
-
-      marks.render_for_buffer(bufnr, "new")
-      local extmarks_new = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
-      assert.equals(1, #extmarks_new)
+      marks.render_for_buffer(bufnr)
+      local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
+      assert.equals(1, #extmarks)
     end)
   end)
 end)

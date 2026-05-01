@@ -33,7 +33,7 @@ describe("marks file_override", function()
       store.add("src/app.lua", 3, "issue", "Fix this")
 
       -- Buffer has no name, but file_override provides the path
-      marks.render_for_buffer(bufnr, nil, "src/app.lua")
+      marks.render_for_buffer(bufnr, "src/app.lua")
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
@@ -42,14 +42,12 @@ describe("marks file_override", function()
       assert.equals(2, extmarks[1][2])
     end)
 
-    it("renders comments when buffer has codediff:// name that would fail parsing", function()
-      -- Simulate the actual codediff URI format that breaks the old regex
-      vim.api.nvim_buf_set_name(bufnr, "codediff:///Users/george/repo///abc123/src/app.lua")
+    it("renders comments with file_override even when buffer name is unusable", function()
+      vim.api.nvim_buf_set_name(bufnr, "term://review")
 
       store.add("src/app.lua", 3, "note", "A note")
 
-      -- Without file_override this would fail (old regex can't parse this URI)
-      marks.render_for_buffer(bufnr, "new", "src/app.lua")
+      marks.render_for_buffer(bufnr, "src/app.lua")
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
@@ -60,7 +58,7 @@ describe("marks file_override", function()
     it("normalizes file_override path (strips leading ./)", function()
       store.add("src/app.lua", 3, "issue", "Fix")
 
-      marks.render_for_buffer(bufnr, nil, "./src/app.lua")
+      marks.render_for_buffer(bufnr, "./src/app.lua")
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
@@ -71,7 +69,7 @@ describe("marks file_override", function()
     it("normalizes file_override path (strips trailing slashes)", function()
       store.add("src/app.lua", 3, "issue", "Fix")
 
-      marks.render_for_buffer(bufnr, nil, "src/app.lua/")
+      marks.render_for_buffer(bufnr, "src/app.lua/")
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
@@ -82,19 +80,7 @@ describe("marks file_override", function()
     it("renders nothing when file_override has no matching comments", function()
       store.add("other_file.lua", 3, "issue", "Fix")
 
-      marks.render_for_buffer(bufnr, nil, "src/app.lua")
-
-      local ns_id = vim.api.nvim_create_namespace("review")
-      local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
-
-      assert.equals(0, #extmarks)
-    end)
-
-    it("passes side through when using file_override", function()
-      store.add("src/app.lua", 3, "issue", "Old side comment", nil, "old")
-
-      -- Request "new" side: should not find the "old" comment
-      marks.render_for_buffer(bufnr, "new", "src/app.lua")
+      marks.render_for_buffer(bufnr, "src/app.lua")
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
@@ -107,7 +93,7 @@ describe("marks file_override", function()
 
       store.add("src/fallback.lua", 3, "issue", "Fallback test")
 
-      marks.render_for_buffer(bufnr, nil, nil)
+      marks.render_for_buffer(bufnr)
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })

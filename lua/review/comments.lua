@@ -4,6 +4,7 @@ local store = require("review.store")
 local hooks = require("review.hooks")
 local popup = require("review.popup")
 local marks = require("review.marks")
+local utils = require("review.utils")
 
 local function notify(msg, level)
   vim.notify(msg, level, { title = "review.nvim" })
@@ -11,13 +12,13 @@ end
 
 ---@param initial_type? "note"|"suggestion"|"issue"|"praise"
 function M.add_at_cursor(initial_type)
-  local file, line, side = hooks.get_cursor_position()
+  local file, line = hooks.get_cursor_position()
   if not file or not line then
     notify("Could not determine cursor position", vim.log.levels.WARN)
     return
   end
 
-  local existing = store.get_at_line(file, line, side)
+  local existing = store.get_at_line(file, line)
   if existing then
     notify("Comment already exists at this line. Use edit instead.", vim.log.levels.WARN)
     return
@@ -25,7 +26,7 @@ function M.add_at_cursor(initial_type)
 
   popup.open(initial_type or "note", nil, function(comment_type, text)
     if comment_type and text then
-      store.add(file, line, comment_type, text, nil, side)
+      store.add(file, line, comment_type, text)
       vim.schedule(function()
         marks.refresh()
       end)
@@ -41,7 +42,7 @@ end
 
 ---@param initial_type? "note"|"suggestion"|"issue"|"praise"
 function M.file_comment(initial_type)
-  local file = hooks.get_cursor_position()
+  local file = hooks.get_buffer_file()
   if not file then
     notify("Could not determine file", vim.log.levels.WARN)
     return
@@ -73,13 +74,13 @@ end
 
 ---@param initial_type? "note"|"suggestion"|"issue"|"praise"
 function M.add_for_range(initial_type)
-  local file, start_line, end_line, side = hooks.get_visual_range()
+  local file, start_line, end_line = hooks.get_visual_range()
   if not file or not start_line or not end_line then
     notify("Could not determine visual selection", vim.log.levels.WARN)
     return
   end
 
-  local existing = store.get_overlapping(file, start_line, end_line, side)
+  local existing = store.get_overlapping(file, start_line, end_line)
   if existing then
     notify("Comment already exists in this range. Use edit instead.", vim.log.levels.WARN)
     return
@@ -87,7 +88,7 @@ function M.add_for_range(initial_type)
 
   popup.open(initial_type or "note", nil, function(comment_type, text)
     if comment_type and text then
-      store.add(file, start_line, comment_type, text, end_line, side)
+      store.add(file, start_line, comment_type, text, end_line)
       vim.schedule(function()
         marks.refresh()
       end)
@@ -97,13 +98,13 @@ function M.add_for_range(initial_type)
 end
 
 function M.edit_at_cursor()
-  local file, line, side = hooks.get_cursor_position()
+  local file, line = hooks.get_cursor_position()
   if not file or not line then
     notify("Could not determine cursor position", vim.log.levels.WARN)
     return
   end
 
-  local comment = store.get_at_line(file, line, side)
+  local comment = store.get_at_line(file, line)
   if not comment and line == 1 then
     comment = store.get_file_comment(file)
   end
@@ -125,13 +126,13 @@ function M.edit_at_cursor()
 end
 
 function M.delete_at_cursor()
-  local file, line, side = hooks.get_cursor_position()
+  local file, line = hooks.get_cursor_position()
   if not file or not line then
     notify("Could not determine cursor position", vim.log.levels.WARN)
     return
   end
 
-  local comment = store.get_at_line(file, line, side)
+  local comment = store.get_at_line(file, line)
   if not comment and line == 1 then
     comment = store.get_file_comment(file)
   end
@@ -155,12 +156,12 @@ function M.delete_at_cursor()
 end
 
 function M.goto_next()
-  local file, line, side = hooks.get_cursor_position()
+  local file, line = hooks.get_cursor_position()
   if not file then
     return
   end
 
-  local comments = store.get_for_file(file, side)
+  local comments = store.get_for_file(file)
   for _, comment in ipairs(comments) do
     if comment.line > line then
       vim.api.nvim_win_set_cursor(0, { comment.line, 0 })
@@ -172,12 +173,12 @@ function M.goto_next()
 end
 
 function M.goto_prev()
-  local file, line, side = hooks.get_cursor_position()
+  local file, line = hooks.get_cursor_position()
   if not file then
     return
   end
 
-  local comments = store.get_for_file(file, side)
+  local comments = store.get_for_file(file)
   for i = #comments, 1, -1 do
     local comment = comments[i]
     if comment.line < line then
@@ -205,15 +206,8 @@ function M.list()
     local icon = type_info and type_info.icon or "●"
     local name = type_info and type_info.name or comment.type
     local location
-    local is_old = (comment.side or "new") == "old"
     if comment.line == 0 then
       location = comment.file
-    elseif is_old then
-      if comment.line_end and comment.line_end ~= comment.line then
-        location = string.format("%s:~%d-~%d", comment.file, comment.line, comment.line_end)
-      else
-        location = string.format("%s:~%d", comment.file, comment.line)
-      end
     elseif comment.line_end and comment.line_end ~= comment.line then
       location = string.format("%s:%d-%d", comment.file, comment.line, comment.line_end)
     else
@@ -236,30 +230,17 @@ function M.list()
 
     local comment = choice.comment
 
-    -- Try to navigate to the file in codediff explorer
-    local ok, lifecycle = pcall(require, "codediff.ui.lifecycle")
-    if ok then
-      local tabpage = hooks.get_current_tabpage()
-      if tabpage then
-        local explorer = lifecycle.get_explorer(tabpage)
-        if explorer then
-          local explorer_mod = require("codediff.ui.explorer")
-          -- Find and select the file in explorer
-          -- This is a best-effort navigation
-          for i, node in ipairs(explorer.tree:get_nodes()) do
-            if node.path == comment.file then
-              explorer_mod.select_node(explorer, node)
-              break
-            end
-          end
-        end
-      end
+    local path = utils.resolve_comment_path(comment.file)
+    local ok = pcall(vim.cmd, "edit " .. vim.fn.fnameescape(path))
+    if not ok then
+      notify("Could not open " .. comment.file, vim.log.levels.WARN)
+      return
     end
 
-    -- Jump to line after a short delay (line 1 for file-level comments)
     vim.defer_fn(function()
       local target_line = comment.line == 0 and 1 or comment.line
       pcall(vim.api.nvim_win_set_cursor, 0, { target_line, 0 })
+      marks.refresh()
     end, 100)
   end)
 end

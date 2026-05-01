@@ -29,17 +29,15 @@ describe("path relativization for comment rendering", function()
   end)
 
   describe("monorepo path mismatch", function()
-    -- Simulates the real bug: CWD is a subdirectory of git_root (e.g., backend/ngen/),
-    -- so lifecycle.get_paths() returns paths relative to CWD (e.g., ".github/workflows/ci.yml")
-    -- but comments are stored relative to git_root (e.g., "backend/ngen/.github/workflows/ci.yml").
-    -- render_for_buffer must use the git_root-relative path to find stored comments.
+    -- Simulates the monorepo case where comments are stored relative to the
+    -- git root (e.g., "backend/ngen/.github/workflows/ci.yml"), not a nested cwd.
 
     it("finds comments when stored with git-root-relative path but buffer uses CWD-relative path", function()
       -- Comment stored with full git-root-relative path (as get_cursor_position does)
       store.add("backend/ngen/.github/workflows/ci.yml", 3, "issue", "Fix this workflow")
 
       -- Rendering uses git-root-relative path via file_override (after relativization fix)
-      marks.render_for_buffer(bufnr, "new", "backend/ngen/.github/workflows/ci.yml")
+      marks.render_for_buffer(bufnr, "backend/ngen/.github/workflows/ci.yml")
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
@@ -52,7 +50,7 @@ describe("path relativization for comment rendering", function()
       store.add("backend/ngen/.github/workflows/ci.yml", 3, "issue", "Fix this workflow")
 
       -- If we pass CWD-relative path (the bug), it won't match
-      marks.render_for_buffer(bufnr, "new", ".github/workflows/ci.yml")
+      marks.render_for_buffer(bufnr, ".github/workflows/ci.yml")
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
@@ -60,24 +58,24 @@ describe("path relativization for comment rendering", function()
       assert.equals(0, #extmarks)
     end)
 
-    it("renders on both sides with git-root-relative paths", function()
-      store.add("backend/ngen/src/app.lua", 3, "note", "Old side note", nil, "old")
-      store.add("backend/ngen/src/app.lua", 3, "suggestion", "New side suggestion", nil, "new")
+    it("renders the same git-root-relative comments in multiple buffers", function()
+      store.add("backend/ngen/src/app.lua", 3, "note", "First note")
+      store.add("backend/ngen/src/app.lua", 4, "suggestion", "Second suggestion")
 
       local orig_buf = vim.api.nvim_create_buf(false, true)
       vim.api.nvim_buf_set_lines(orig_buf, 0, -1, false, {
         "line 1", "line 2", "line 3", "line 4",
       })
 
-      marks.render_for_buffer(orig_buf, "old", "backend/ngen/src/app.lua")
-      marks.render_for_buffer(bufnr, "new", "backend/ngen/src/app.lua")
+      marks.render_for_buffer(orig_buf, "backend/ngen/src/app.lua")
+      marks.render_for_buffer(bufnr, "backend/ngen/src/app.lua")
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local orig_marks = vim.api.nvim_buf_get_extmarks(orig_buf, ns_id, 0, -1, { details = true })
       local mod_marks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
 
-      assert.equals(1, #orig_marks)
-      assert.equals(1, #mod_marks)
+      assert.equals(2, #orig_marks)
+      assert.equals(2, #mod_marks)
 
       vim.api.nvim_buf_delete(orig_buf, { force = true })
     end)
@@ -87,7 +85,7 @@ describe("path relativization for comment rendering", function()
     it("comment stored and rendered with same normalized path are found", function()
       local path = "src/components/Button.tsx"
       store.add(path, 3, "issue", "Needs accessibility attrs")
-      marks.render_for_buffer(bufnr, "new", path)
+      marks.render_for_buffer(bufnr, path)
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
@@ -98,7 +96,7 @@ describe("path relativization for comment rendering", function()
     it("comment stored with leading ./ is found when rendered without", function()
       -- normalize_path strips leading ./ so both should match
       store.add("src/app.lua", 3, "issue", "Fix")
-      marks.render_for_buffer(bufnr, nil, "./src/app.lua")
+      marks.render_for_buffer(bufnr, "./src/app.lua")
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })
@@ -112,7 +110,7 @@ describe("path relativization for comment rendering", function()
       store.add(path, 3, "issue", "Second")
       store.add(path, 5, "suggestion", "Third")
 
-      marks.render_for_buffer(bufnr, nil, path)
+      marks.render_for_buffer(bufnr, path)
 
       local ns_id = vim.api.nvim_create_namespace("review")
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, { details = true })

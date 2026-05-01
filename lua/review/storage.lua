@@ -1,43 +1,8 @@
 local M = {}
 
+local utils = require("review.utils")
+
 local data_dir = vim.fn.stdpath("data") .. "/review"
-
----@type {rev1: string, rev2: string}|nil
-local current_revisions = nil
-
-function M.set_revisions(rev1, rev2)
-  current_revisions = (rev1 and rev2) and { rev1 = rev1, rev2 = rev2 } or nil
-end
-
-function M.clear_revisions()
-  current_revisions = nil
-end
-
----@return string|nil
-local function get_git_root()
-  local handle = io.popen("git rev-parse --show-toplevel 2>/dev/null")
-  if handle then
-    local result = handle:read("*a")
-    handle:close()
-    if result and result ~= "" then
-      return result:gsub("%s+$", "")
-    end
-  end
-  return nil
-end
-
----@return string|nil
-local function get_git_branch()
-  local handle = io.popen("git rev-parse --abbrev-ref HEAD 2>/dev/null")
-  if handle then
-    local result = handle:read("*a")
-    handle:close()
-    if result and result ~= "" then
-      return result:gsub("%s+$", "")
-    end
-  end
-  return nil
-end
 
 ---@param str string
 ---@return string
@@ -49,37 +14,15 @@ local function hash(str)
   return string.format("%x", h)
 end
 
----@param rev string
----@return string
-local function short_rev(rev)
-  return rev:gsub("%^$", ""):sub(1, 8)
-end
-
 ---@return string|nil
 function M.get_storage_path()
-  local git_root = get_git_root()
-  if not git_root then
-    return nil
-  end
-
-  local project_hash = hash(git_root)
+  local project_root = utils.get_project_root()
+  local project_hash = hash(project_root)
 
   -- Ensure directory exists (pcall to suppress error if exists)
   pcall(vim.fn.mkdir, data_dir, "p")
 
-  if current_revisions then
-    local r1 = short_rev(current_revisions.rev1)
-    local r2 = short_rev(current_revisions.rev2)
-    return string.format("%s/%s-%s_%s.json", data_dir, project_hash, r1, r2)
-  end
-
-  local branch = get_git_branch()
-  if not branch then
-    return nil
-  end
-
-  local safe_branch = branch:gsub("[^%w%-_]", "_")
-  return string.format("%s/%s-%s.json", data_dir, project_hash, safe_branch)
+  return string.format("%s/%s.json", data_dir, project_hash)
 end
 
 ---@param comments table

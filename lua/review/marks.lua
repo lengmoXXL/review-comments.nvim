@@ -2,7 +2,7 @@ local M = {}
 
 local store = require("review.store")
 local config = require("review.config")
-local normalize_path = require("review.utils").normalize_path
+local utils = require("review.utils")
 
 local ns_id = vim.api.nvim_create_namespace("review")
 local ns_padding = vim.api.nvim_create_namespace("review_padding")
@@ -35,37 +35,24 @@ local function build_comment_box(text, type_name, hl)
 end
 
 ---@param bufnr number
----@param side? "old"|"new"
 ---@param file_override? string file path to use directly instead of parsing buffer name
-function M.render_for_buffer(bufnr, side, file_override)
+function M.render_for_buffer(bufnr, file_override)
   if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
   local file
   if file_override then
-    file = normalize_path(file_override)
+    file = utils.to_comment_path(file_override)
   else
-    local bufname = vim.api.nvim_buf_get_name(bufnr)
-    if not bufname or bufname == "" then
-      return
-    end
-
-    if bufname:match("^codediff://") then
-      local path = bufname:match("^codediff://[^/]+/(.+)%?") or bufname:match("^codediff://[^/]+/(.+)$")
-      if path then
-        file = normalize_path(path)
-      end
-    else
-      file = normalize_path(vim.fn.fnamemodify(bufname, ":."))
-    end
+    file = utils.get_buffer_comment_path(bufnr)
   end
 
   if not file then
     return
   end
 
-  local comments = store.get_for_file(file, side)
+  local comments = store.get_for_file(file)
 
   vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
 
@@ -137,100 +124,13 @@ function M.render_for_buffer(bufnr, side, file_override)
   end
 end
 
----Calculate the height of a comment's virtual line box
----@param comment table
----@return number height, number attach_line (0-indexed)
-local function comment_box_height(comment)
-  local text_lines = vim.split(comment.text, "\n")
-  local height = #text_lines + 2 -- top border + content + bottom border
-  local attach_line
-  if comment.line == 0 then
-    attach_line = 0
-  else
-    attach_line = (comment.line_end or comment.line) - 1
-  end
-  return height, attach_line
-end
-
----Add blank padding lines on one buffer to match comment boxes on the other
----@param orig_buf number
----@param mod_buf number
----@param orig_file string|nil
----@param mod_file string|nil
-function M.align_buffers(orig_buf, mod_buf, orig_file, mod_file)
-  if orig_buf and vim.api.nvim_buf_is_valid(orig_buf) then
-    vim.api.nvim_buf_clear_namespace(orig_buf, ns_padding, 0, -1)
-  end
-  if mod_buf and vim.api.nvim_buf_is_valid(mod_buf) then
-    vim.api.nvim_buf_clear_namespace(mod_buf, ns_padding, 0, -1)
-  end
-
-  if not orig_buf or not mod_buf
-    or not vim.api.nvim_buf_is_valid(orig_buf)
-    or not vim.api.nvim_buf_is_valid(mod_buf)
-    or (not orig_file and not mod_file) then
-    return
-  end
-
-  -- Build height maps: attach_line -> total virt_line height per side
-  -- Skip file comments (line 0) since they render identically on both sides
-  local function build_height_map(file, side)
-    if not file then return {} end
-    local map = {}
-    for _, comment in ipairs(store.get_for_file(file, side)) do
-      if comment.line ~= 0 and (comment.side or "new") == side then
-        local height, attach_line = comment_box_height(comment)
-        map[attach_line] = (map[attach_line] or 0) + height
-      end
-    end
-    return map
-  end
-
-  local old_map = build_height_map(orig_file, "old")
-  local new_map = build_height_map(mod_file, "new")
-
-  local all_lines = {}
-  for line in pairs(old_map) do all_lines[line] = true end
-  for line in pairs(new_map) do all_lines[line] = true end
-
-  for line in pairs(all_lines) do
-    local old_h = old_map[line] or 0
-    local new_h = new_map[line] or 0
-    local diff = old_h - new_h
-
-    if diff ~= 0 then
-      local target_buf = diff > 0 and mod_buf or orig_buf
-      local pad_count = math.abs(diff)
-      local padding = {}
-      for _ = 1, pad_count do
-        table.insert(padding, { { "", "Normal" } })
-      end
-      pcall(vim.api.nvim_buf_set_extmark, target_buf, ns_padding, line, 0, {
-        virt_lines = padding,
-        virt_lines_above = false,
-      })
-    end
-  end
-end
-
 function M.refresh()
   local ok, hooks = pcall(require, "review.hooks")
   if not ok then
     return
   end
 
-  local orig_buf, mod_buf = hooks.get_buffers()
-  local orig_path, mod_path = hooks.get_paths()
-  if orig_buf then
-    M.render_for_buffer(orig_buf, "old", orig_path)
-  end
-  if mod_buf then
-    M.render_for_buffer(mod_buf, "new", mod_path)
-  end
-
-  if orig_buf and mod_buf and (orig_path or mod_path) then
-    M.align_buffers(orig_buf, mod_buf, orig_path, mod_path)
-  end
+  hooks.refresh_current_buffer()
 end
 
 function M.clear_all()
