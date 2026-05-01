@@ -92,6 +92,8 @@ Comment popup:
 
 Tmux pane picker:
 
+Pane rows are displayed as `TITLE  LOC  WINDOW  COMMAND  PATH`.
+
 | Key | Action |
 |-----|--------|
 | `Enter` | Paste comments into the selected pane |

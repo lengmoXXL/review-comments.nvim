@@ -27,21 +27,35 @@ describe("review-comments.tmux", function()
 
   describe("parse_pane_line", function()
     it("parses tmux pane fields", function()
-      local pane = t.parse_pane_line("%1\t2\t0\teditor\tnvim\t/workspace/project")
+      local pane = t.parse_pane_line("%1\t2\t0\teditor\tcodex\tnvim\t/workspace/project")
 
       assert.equals("%1", pane.id)
       assert.equals("2", pane.window_index)
       assert.equals("0", pane.pane_index)
       assert.equals("editor", pane.window_name)
+      assert.equals("codex", pane.title)
       assert.equals("nvim", pane.command)
       assert.equals("/workspace/project", pane.path)
-      assert.matches("%%1", pane.display)
+      assert.is_nil(pane.display:find("%%1"))
       assert.matches("2%.0", pane.display)
+      assert.matches("codex", pane.display)
     end)
 
     it("ignores malformed rows", function()
       assert.is_nil(t.parse_pane_line(""))
       assert.is_nil(t.parse_pane_line("%1\t2"))
+    end)
+
+    it("aligns pane display with the header", function()
+      local header = t.header_line()
+      local pane = t.parse_pane_line("%12\t10\t3\teditor\tcodex\tnvim\t/workspace/project")
+
+      assert.is_nil(pane.display:find("%%12"))
+      assert.equals(header:find("TITLE", 1, true), pane.display:find("codex", 1, true))
+      assert.equals(header:find("LOC", 1, true), pane.display:find("10.3", 1, true))
+      assert.equals(header:find("WINDOW", 1, true), pane.display:find("editor", 1, true))
+      assert.equals(header:find("COMMAND", 1, true), pane.display:find("nvim", 1, true))
+      assert.equals(header:find("PATH", 1, true), pane.display:find("/workspace/project", 1, true))
     end)
   end)
 
@@ -53,8 +67,8 @@ describe("review-comments.tmux", function()
           return true, { "work" }, 0
         end
         return true, {
-          "%1\t1\t0\teditor\tnvim\t/workspace/review.nvim",
-          "%2\t1\t1\tshell\tbash\t/workspace/review.nvim",
+          "%1\t1\t0\teditor\tcodex\tnvim\t/workspace/review.nvim",
+          "%2\t1\t1\tshell\tserver\tbash\t/workspace/review.nvim",
         }, 0
       end)
 
@@ -115,6 +129,19 @@ describe("review-comments.tmux", function()
       tmux.send_current_review()
 
       assert.equals(0, #calls)
+    end)
+  end)
+
+  describe("build_picker_lines", function()
+    it("keeps the header separate from selectable pane rows", function()
+      local header, lines = t.build_picker_lines({
+        { id = "%1", display = "title                 1.0    win               cmd             path" },
+      })
+
+      assert.matches("TITLE", header)
+      assert.equals(1, #lines)
+      assert.not_matches("TITLE", lines[1])
+      assert.matches("title", lines[1])
     end)
   end)
 end)

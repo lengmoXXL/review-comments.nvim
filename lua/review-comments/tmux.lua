@@ -8,6 +8,14 @@ local DELIMITER = "\t"
 local recent_panes = {}
 local picker_popup = nil
 local picker_prev_win = nil
+local picker_ns = vim.api.nvim_create_namespace("review_comments_tmux_picker")
+
+local COLUMN_WIDTHS = {
+  title = 20,
+  location = 5,
+  window = 16,
+  command = 14,
+}
 
 local function notify(msg, level)
   vim.notify(msg, level, { title = "review-comments.nvim" })
@@ -33,17 +41,67 @@ local function trim(s)
   return (s or ""):gsub("^%s+", ""):gsub("%s+$", "")
 end
 
+local function truncate_cell(value, width)
+  value = tostring(value or "")
+  if vim.fn.strdisplaywidth(value) <= width then
+    return value
+  end
+
+  local max_chars = math.max(width - 1, 0)
+  local truncated = vim.fn.strcharpart(value, 0, max_chars)
+  while vim.fn.strdisplaywidth(truncated) > max_chars do
+    truncated = vim.fn.strcharpart(truncated, 0, math.max(vim.fn.strchars(truncated) - 1, 0))
+  end
+  return truncated .. "~"
+end
+
+local function cell(value, width)
+  local text = truncate_cell(value, width)
+  local padding = math.max(width - vim.fn.strdisplaywidth(text), 0)
+  return text .. string.rep(" ", padding)
+end
+
+local function header_line()
+  return table.concat({
+    cell("TITLE", COLUMN_WIDTHS.title),
+    cell("LOC", COLUMN_WIDTHS.location),
+    cell("WINDOW", COLUMN_WIDTHS.window),
+    cell("COMMAND", COLUMN_WIDTHS.command),
+    "PATH",
+  }, "  ")
+end
+
 local function pane_display(pane)
   local location = string.format("%s.%s", pane.window_index ~= "" and pane.window_index or "?", pane.pane_index ~= "" and pane.pane_index or "?")
   local window_name = pane.window_name ~= "" and pane.window_name or "-"
+  local title = pane.title ~= "" and pane.title or "-"
   local command = pane.command ~= "" and pane.command or "-"
   local path = pane.path ~= "" and pane.path or "-"
-  return string.format("%s  %s  %s  %s  %s", pane.id, location, window_name, command, path)
+  return table.concat({
+    cell(title, COLUMN_WIDTHS.title),
+    cell(location, COLUMN_WIDTHS.location),
+    cell(window_name, COLUMN_WIDTHS.window),
+    cell(command, COLUMN_WIDTHS.command),
+    path,
+  }, "  ")
+end
+
+local function build_picker_lines(panes)
+  local lines = {}
+  local header = header_line()
+  local max_width = vim.fn.strdisplaywidth(header)
+  for _, pane in ipairs(panes) do
+    local line = pane.display or pane_display(pane)
+    table.insert(lines, line)
+    max_width = math.max(max_width, vim.fn.strdisplaywidth(line))
+  end
+
+  return header, lines, max_width
 end
 
 local function parse_pane_line(line)
   local parts = vim.split(line or "", DELIMITER, { plain = true })
-  if #parts < 6 or parts[1] == "" then
+  if #parts < 7 or parts[1] == "" then
     return nil
   end
 
@@ -52,8 +110,9 @@ local function parse_pane_line(line)
     window_index = parts[2] or "",
     pane_index = parts[3] or "",
     window_name = parts[4] or "",
-    command = parts[5] or "",
-    path = table.concat(parts, DELIMITER, 6),
+    title = parts[5] or "",
+    command = parts[6] or "",
+    path = table.concat(parts, DELIMITER, 7),
   }
   pane.display = pane_display(pane)
   return pane
@@ -123,6 +182,7 @@ function M.list_panes()
     "#{window_index}",
     "#{pane_index}",
     "#{window_name}",
+    "#{pane_title}",
     "#{pane_current_command}",
     "#{pane_current_path}",
   }, DELIMITER)
@@ -197,18 +257,12 @@ function M.open_picker(panes, on_submit)
     return
   end
 
-  local lines = {}
-  local max_width = 0
-  for _, pane in ipairs(panes) do
-    local line = pane.display or pane_display(pane)
-    table.insert(lines, line)
-    max_width = math.max(max_width, vim.fn.strdisplaywidth(line))
-  end
+  local header, lines, max_width = build_picker_lines(panes)
 
   local columns = vim.o.columns > 0 and vim.o.columns or 80
   local rows = vim.o.lines > 0 and vim.o.lines or 24
   local width = math.min(math.max(max_width + 2, 50), math.max(columns - 4, 20))
-  local height = math.min(#lines, math.max(rows - 4, 1))
+  local height = math.min(#lines + 1, math.max(rows - 4, 2))
 
   picker_prev_win = vim.api.nvim_get_current_win()
   picker_popup = Popup({
@@ -219,7 +273,7 @@ function M.open_picker(panes, on_submit)
       text = {
         top = " tmux panes ",
         top_align = "center",
-        bottom = " Enter paste | C-s paste+send ",
+        bottom = " Enter paste | C-s paste+enter ",
         bottom_align = "center",
       },
     },
@@ -240,7 +294,17 @@ function M.open_picker(panes, on_submit)
   vim.api.nvim_set_option_value("modifiable", true, { buf = buf })
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = buf })
+  vim.api.nvim_buf_set_extmark(buf, picker_ns, 0, 0, {
+    virt_lines = { { { header, "Comment" } } },
+    virt_lines_above = true,
+  })
   vim.api.nvim_set_current_win(picker_popup.winid)
+  vim.api.nvim_win_call(picker_popup.winid, function()
+    local view = vim.fn.winsaveview()
+    view.topline = 1
+    view.topfill = 1
+    vim.fn.winrestview(view)
+  end)
 
   local function submit(send_enter)
     if not picker_popup then
@@ -289,6 +353,9 @@ end
 M._test = {
   parse_pane_line = parse_pane_line,
   pane_display = pane_display,
+  header_line = header_line,
+  build_picker_lines = build_picker_lines,
+  picker_namespace = picker_ns,
   remember_pane = remember_pane,
   sort_panes_by_recent = sort_panes_by_recent,
   reset_recent = function()

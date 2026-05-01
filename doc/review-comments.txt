@@ -151,6 +151,10 @@ TMUX PANE PICKER                           *review-comments-keymaps-tmux*
 
 These keymaps are active inside the tmux pane picker:
 
+Pane rows are displayed as: >
+    TITLE  LOC  WINDOW  COMMAND  PATH
+<
+
     Key            Description ~
     `<CR>`         Paste comments into the selected pane       |n|
     `<C-s>`        Paste comments and press Enter              |n|
