@@ -4,6 +4,8 @@ Code review comments for normal Neovim file buffers, optimized for AI feedback l
 
 Forked from [georgeguimaraes/review.nvim](https://github.com/georgeguimaraes/review.nvim) and remove the use of codediff.nvim
 
+<img src="./demo.gif" width="1000">
+
 ## Features
 
 - Add comments to specific lines in normal file buffers (Note, Suggestion, Issue, Praise)
