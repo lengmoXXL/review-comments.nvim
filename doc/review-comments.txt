@@ -143,9 +143,11 @@ These keymaps are active inside the comment popup window:
     Key         Description ~
     `<C-s>`       Submit comment                         |i, n|
     `<CR>`        Submit comment (normal mode only)      |n|
-    `q`           Cancel (normal mode)                   |n|
-    `<Esc>`       Cancel (normal mode)                   |n|
+    `q`           Prompt to discard; type y              |n|
+    `<Esc>`       Prompt to discard; type y              |n|
     `<Tab>`       Cycle comment type                     |i, n|
+
+Long comment lines wrap inside the popup while editing.
 
 TMUX PANE PICKER                           *review-comments-keymaps-tmux*
 

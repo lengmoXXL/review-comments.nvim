@@ -90,7 +90,9 @@ Comment popup:
 | `Enter` | Insert newline |
 | `Ctrl+s` | Submit comment |
 | `Tab` | Cycle comment type |
-| `Esc` / `q` | Cancel in normal mode |
+| `Esc` / `q` | Prompt to discard non-empty comments in normal mode; type `y` to confirm |
+
+Long comment lines wrap inside the popup while editing.
 
 Tmux pane picker:
 

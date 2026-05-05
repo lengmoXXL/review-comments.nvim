@@ -30,6 +30,8 @@ function M.open(initial_type, initial_text, callback)
   local cfg = config.get()
   local type_keys = { "note", "suggestion", "issue", "praise" }
   local current_type_idx = 1
+  local max_width = math.max(vim.o.columns - 4, 1)
+  local width = math.min(max_width, math.max(60, math.floor(vim.o.columns * 0.8)))
 
   -- Find initial type index
   if initial_type then
@@ -52,6 +54,7 @@ function M.open(initial_type, initial_text, callback)
     },
     win_options = {
       winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+      wrap = false,
     },
   })
 
@@ -66,6 +69,9 @@ function M.open(initial_type, initial_text, callback)
     },
     win_options = {
       winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+      wrap = true,
+      linebreak = true,
+      breakindent = true,
     },
     buf_options = {
       modifiable = true,
@@ -77,7 +83,7 @@ function M.open(initial_type, initial_text, callback)
     {
       position = "50%",
       size = {
-        width = 60,
+        width = width,
         height = 10,
       },
     },
@@ -129,14 +135,45 @@ function M.open(initial_type, initial_text, callback)
     restore_focus()
   end
 
-  local function close()
+  local function discard()
     layout:unmount()
     callback(nil, nil)
     restore_focus()
   end
 
+  local confirming_discard = false
+
+  local function confirm_discard()
+    if confirming_discard then
+      return
+    end
+
+    if get_text() == "" then
+      discard()
+      return
+    end
+
+    confirming_discard = true
+    vim.ui.input({ prompt = "Discard comment? Type y to confirm: " }, function(input)
+      confirming_discard = false
+      if input == "y" then
+        discard()
+        return
+      end
+
+      if text_popup.winid and vim.api.nvim_win_is_valid(text_popup.winid) then
+        vim.api.nvim_set_current_win(text_popup.winid)
+        vim.cmd("startinsert")
+      end
+    end)
+  end
+
   layout:mount()
   render_types()
+
+  vim.api.nvim_set_option_value("wrap", true, { win = text_popup.winid })
+  vim.api.nvim_set_option_value("linebreak", true, { win = text_popup.winid })
+  vim.api.nvim_set_option_value("breakindent", true, { win = text_popup.winid })
 
   -- Set initial text if provided
   if initial_text and initial_text ~= "" then
@@ -162,9 +199,9 @@ function M.open(initial_type, initial_text, callback)
   vim.keymap.set("n", "<CR>", submit, { buffer = text_popup.bufnr, noremap = true })
 
   -- Cancel
-  vim.keymap.set("n", "<Esc>", close, { buffer = text_popup.bufnr, noremap = true })
+  vim.keymap.set("n", "<Esc>", confirm_discard, { buffer = text_popup.bufnr, noremap = true })
   if km.popup_cancel then
-    vim.keymap.set("n", km.popup_cancel, close, { buffer = text_popup.bufnr, noremap = true })
+    vim.keymap.set("n", km.popup_cancel, confirm_discard, { buffer = text_popup.bufnr, noremap = true })
   end
 end
 
